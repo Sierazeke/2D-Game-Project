@@ -4,9 +4,12 @@ public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 5f;
     public float jumpForce = 10f;
-
     private Rigidbody2D rb;
     private bool isGrounded;
+    public Transform groundCheck;
+    public float groundCheckRadius = 0.2f;
+    public LayerMask groundLayer;
+    private bool facingRight = true;
 
     void Start()
     {
@@ -15,40 +18,29 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        float move = Input.GetAxis("Horizontal");
-        rb.linearVelocity = new Vector2(move * moveSpeed, rb.linearVelocity.y);
+        // Horizontal movement
+        float moveInput = Input.GetAxisRaw("Horizontal");
+        rb.linearVelocity = new Vector2(moveInput * moveSpeed, rb.linearVelocity.y);
 
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        // Flip player sprite based on movement direction
+        if (moveInput > 0 && !facingRight)
+            Flip();
+        else if (moveInput < 0 && facingRight)
+            Flip();
+
+        // Jumping
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+        if (isGrounded && Input.GetButtonDown("Jump"))
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         }
     }
-    void FixedUpdate()
+
+    void Flip()
     {
-        float move = Input.GetAxisRaw("Horizontal");
-
-        rb.linearVelocity = new Vector2(move * moveSpeed, rb.linearVelocity.y);
-
-        if (move == 0)
-        {
-            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-        }
+        facingRight = !facingRight;
+        Vector3 scaler = transform.localScale;
+        scaler.x *= -1;
+        transform.localScale = scaler;
     }
-
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.collider.CompareTag("Ground"))
-        {
-            isGrounded = true;
-            Debug.Log("On the ground!");
-        }
-    }
-
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.collider.CompareTag("Ground"))
-            isGrounded = false;
-    }
-
 }
